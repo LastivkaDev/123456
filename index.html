@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ЗДО</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;background:#f9f9f9}
+header{background:#38761d;color:#fff;padding:20px;text-align:center}
+nav{background:#2b5c17;display:flex;flex-wrap:wrap}
+nav button{flex:1;color:#fff;background:none;border:none;padding:14px;cursor:pointer}
+nav button.active{background:#f7b231;color:#000}
+.container{padding:20px;width:95%;max-width:1600px;margin:auto;box-sizing:border-box}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.upload{display:none}
+.admin .upload,.editor .upload{display:block}
+button{padding:10px;margin:5px 0;background:#38761d;color:#fff;border:none;border-radius:6px;cursor:pointer}
+button.red{background:#b30000}
+select,input,textarea{width:100%;padding:10px;margin:5px 0;box-sizing:border-box;border-radius:6px;border:1px solid #ccc}
+ul{list-style:none;padding:0}
+li{margin:6px 0}
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.gallery img{width:100%;border-radius:6px;object-fit:cover;max-height:200px}
+@media(max-width:1024px){.container{width:98%;padding:15px}}
+@media(max-width:600px){nav{flex-direction:column}.gallery{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}}
+</style>
+</head>
+<body>
+
+<header id="loginBox">
+<h2>Вхід / Реєстрація</h2>
+<input id="loginInput" placeholder="Email або код">
+<button onclick="login()">Увійти</button>
+<button onclick="register()">Реєстрація</button>
+<button onclick="guest()">Гість</button>
+</header>
+
+<div id="main" class="container" style="display:none">
+<button onclick="logout()" class="red">Вийти</button>
+
+<nav>
+<button class="tab active" data-tab="news">Новини</button>
+<button class="tab" data-tab="groups">Групи</button>
+<button class="tab" data-tab="reviews">Відгуки</button>
+<button class="tab" data-tab="photos">Фотоальбом</button>
+<button class="tab" data-tab="attestations">Атестації</button>
+<button class="tab" data-tab="statut">Статут</button>
+<button class="tab" data-tab="vacancies">Вакантні посади</button>
+<button class="tab" data-tab="files">Файли</button>
+</nav>
+
+<!-- НОВИНИ -->
+<div id="news" class="tab-content active">
+<div class="upload">
+<textarea id="newsText" placeholder="Новина"></textarea>
+<button onclick="addNews()">Додати</button>
+</div>
+<ul id="newsList"></ul>
+</div>
+
+<!-- ГРУПИ -->
+<div id="groups" class="tab-content">
+<h3>Виберіть групу</h3>
+<select id="groupSelect" onchange="renderGroups()">
+    <option value="">-- Виберіть групу --</option>
+    <option value="logopedy_zir">Логопеди Ранній вік "Зірочки"</option>
+    <option value="ran_vik_krap">Ранній вік "Краплинки"</option>
+    <option value="mol_sonechko">Молодша група "Сонечко"</option>
+    <option value="mol_sonyash">Молодша група "Соняшник"</option>
+    <option value="ser_piznayko">Середня група "Пізнайко"</option>
+    <option value="ser_chomus">Середня група "Чомусики"</option>
+    <option value="star_veselka">Старша група "Веселка"</option>
+    <option value="log_bdzilky">Логопедична група "Бджілки"</option>
+</select>
+
+<h3 id="groupTitle"></h3>
+
+<div class="upload">
+<h4>Розклад</h4>
+<textarea id="groupSchedule" placeholder="Розклад"></textarea>
+<button onclick="saveSchedule()">Зберегти</button>
+</div>
+<div id="scheduleShow"></div>
+
+<div class="upload">
+<h4>Діти</h4>
+<input id="childName" placeholder="Імʼя дитини">
+<button onclick="addChild()">Додати дитину</button>
+</div>
+
+<ul id="childrenList"></ul>
+</div>
+
+<!-- ВІДГУКИ -->
+<div id="reviews" class="tab-content">
+<textarea id="reviewText" placeholder="Ваш відгук"></textarea>
+<button onclick="addReview()">Надіслати</button>
+<ul id="reviewList"></ul>
+</div>
+
+<!-- ФОТОАЛЬБОМ -->
+<div id="photos" class="tab-content">
+<div class="upload">
+<input type="file" id="photoInput" multiple accept="image/*">
+<button onclick="addPhotos()">Додати фото</button>
+</div>
+<div class="gallery" id="photoGallery"></div>
+</div>
+
+<!-- АТЕСТАЦІЇ -->
+<div id="attestations" class="tab-content">
+<div class="upload">
+<input type="file" id="attestInput" multiple>
+<button onclick="addAttest()">Додати атестацію</button>
+</div>
+<ul id="attestList"></ul>
+</div>
+
+<!-- СТАТУТ -->
+<div id="statut" class="tab-content">
+<div class="upload">
+<textarea id="statutText" placeholder="Текст статуту"></textarea>
+<button onclick="saveStatut()">Зберегти</button>
+</div>
+<div id="statutShow"></div>
+</div>
+
+<!-- ВАКАНТНІ ПОСАДИ -->
+<div id="vacancies" class="tab-content">
+<div class="upload">
+<textarea id="vacText" placeholder="Вакантні посади"></textarea>
+<button onclick="saveVacancies()">Зберегти</button>
+</div>
+<div id="vacShow"></div>
+</div>
+
+<!-- ФАЙЛИ -->
+<div id="files" class="tab-content">
+<div class="upload">
+<input type="file" id="filesInput" multiple>
+<button onclick="addFiles()">Завантажити</button>
+</div>
+<ul id="filesList"></ul>
+</div>
+
+</div>
+
+<script>
+let role='guest';
+let users=JSON.parse(localStorage.getItem('users')||'[]');
+
+// Дані груп
+const defaultGroupsData = {
+    logopedy_zir:{schedule:'',children:[]},
+    ran_vik_krap:{schedule:'',children:[]},
+    mol_sonechko:{schedule:'',children:[]},
+    mol_sonyash:{schedule:'',children:[]},
+    ser_piznayko:{schedule:'',children:[]},
+    ser_chomus:{schedule:'',children:[]},
+    star_veselka:{schedule:'',children:[]},
+    log_bdzilky:{schedule:'',children:[]}
+};
+let groupsData = JSON.parse(localStorage.getItem('groupsData')) || defaultGroupsData;
+localStorage.setItem('groupsData', JSON.stringify(groupsData));
+
+// Перемикання табів
+document.querySelectorAll('.tab').forEach(b=>{
+b.onclick=()=>{
+document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+b.classList.add('active');
+document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+document.getElementById(b.dataset.tab).classList.add('active');
+}
+});
+
+// Логін
+function login(){
+let v=loginInput.value.toLowerCase();
+const u=users.find(x=>x.email===v || x.code===v);
+if(u){role=u.role;} else if(v==='lisovectana370@gmail.com'){role='admin';} else if(v==='1890'){role='editor';} else return alert('Невірно');
+document.body.className=role;
+loginBox.style.display='none';
+main.style.display='block';
+renderAll();
+}
+
+// Реєстрація
+function register(){
+let email=prompt('Введіть email');
+let code=prompt('Введіть код (для входу)');
+users.push({email,email,code,role:'editor'});
+localStorage.setItem('users',JSON.stringify(users));
+alert('Користувач доданий!');
+}
+
+function guest(){role='guest';loginBox.style.display='none';main.style.display='block';renderAll();}
+function logout(){location.reload();}
+
+// НОВИНИ
+function addNews(){if(role==='guest')return;let n=JSON.parse(localStorage.getItem('news')||'[]');n.push(newsText.value);localStorage.setItem('news',JSON.stringify(n));renderAll();}
+
+// ГРУПИ
+function renderGroups(){
+    const g = groupSelect.value;
+    if(!g){groupTitle.innerText='';childrenList.innerHTML='';scheduleShow.innerText='';return;}
+
